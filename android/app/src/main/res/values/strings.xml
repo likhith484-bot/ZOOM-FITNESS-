@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ZoomFit</string>
+    <string name="title_activity_main">ZoomFit</string>
+    <string name="package_name">com.zoomfit.app</string>
+    <string name="custom_url_scheme">com.zoomfit.app</string>
+</resources>

@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores fitness metrics and goals for a user.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["client", "trainer"] },
+        "age": { "type": "number" },
+        "height": { "type": "number" },
+        "weight": { "type": "number" },
+        "targetWeight": { "type": "number" },
+        "dailyCalorieGoal": { "type": "number" },
+        "fitnessGoal": { "type": "string", "enum": ["weight_loss", "muscle_gain", "maintenance"] },
+        "trainerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Trainer": {
+      "title": "Trainer Profile",
+      "description": "Stores trainer-specific information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "specialization": { "type": "string" },
+        "experience": { "type": "number" }
+      },
+      "required": ["uid"]
+    },
+    "WorkoutPlan": {
+      "title": "Workout Plan",
+      "description": "Exercises and schedule assigned by a trainer.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "exercises": { "type": "array", "items": { "type": "object" } },
+        "assignedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "DietPlan": {
+      "title": "Diet Plan",
+      "description": "Meal plan and calorie targets assigned by a trainer.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "meals": { "type": "array", "items": { "type": "object" } },
+        "totalCalories": { "type": "number" },
+        "assignedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ProgressLog": {
+      "title": "Progress Log",
+      "description": "Daily tracking of weight, calories, and workouts.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "weight": { "type": "number" },
+        "caloriesConsumed": { "type": "number" },
+        "workoutCompleted": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Chat message between client and trainer.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and settings."
+    },
+    "/trainers/{trainerId}": {
+      "schema": "Trainer",
+      "description": "Trainer profiles."
+    },
+    "/users/{userId}/workoutPlans/{planId}": {
+      "schema": "WorkoutPlan",
+      "description": "Workout plans assigned to a user."
+    },
+    "/users/{userId}/dietPlans/{planId}": {
+      "schema": "DietPlan",
+      "description": "Diet plans assigned to a user."
+    },
+    "/users/{userId}/progressLogs/{logId}": {
+      "schema": "ProgressLog",
+      "description": "Daily progress logs for a user."
+    },
+    "/messages/{chatId}/chats/{messageId}": {
+      "schema": "Message",
+      "description": "Messages in a specific chat thread."
+    }
+  }
+}

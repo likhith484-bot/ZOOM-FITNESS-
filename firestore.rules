@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Fields: uid, displayName, email, role, age, height, weight, trainerId, ...
+    //
+    // Collection: trainers
+    // Fields: uid, displayName, specialization, experience
+    //
+    // Subcollection: users/{userId}/workoutPlans
+    // Subcollection: users/{userId}/dietPlans
+    // Subcollection: users/{userId}/progressLogs
+    //
+    // Collection: messages/{chatId}/chats
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "likhithmuniraju484@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isTrainer() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'trainer';
+    }
+
+    function isClientOfTrainer(clientId) {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(clientId)).data.trainerId == request.auth.uid;
+    }
+
+    // Domain Validators
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['client', 'trainer', 'admin'];
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin() || isClientOfTrainer(userId);
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if (isOwner(userId) || isAdmin() || isTrainer()) && isValidUser(request.resource.data);
+      
+      match /workoutPlans/{planId} {
+        allow read: if isOwner(userId) || isClientOfTrainer(userId) || isAdmin();
+        allow write: if isClientOfTrainer(userId) || isAdmin();
+      }
+      
+      match /dietPlans/{planId} {
+        allow read: if isOwner(userId) || isClientOfTrainer(userId) || isAdmin();
+        allow write: if isClientOfTrainer(userId) || isAdmin();
+      }
+      
+      match /progressLogs/{logId} {
+        allow read: if isOwner(userId) || isClientOfTrainer(userId) || isAdmin();
+        allow write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    match /trainers/{trainerId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(trainerId) || isAdmin();
+    }
+
+    match /messages/{chatId} {
+      allow read, write: if isAuthenticated() && (chatId.split('_').hasAny([request.auth.uid]) || isAdmin());
+      
+      match /chats/{messageId} {
+        allow read, write: if isAuthenticated() && (chatId.split('_').hasAny([request.auth.uid]) || isAdmin());
+      }
+    }
+  }
+}
